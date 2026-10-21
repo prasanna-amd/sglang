@@ -362,6 +362,7 @@ pub fn start(cfg: RuntimeConfig, http_layer: Option<HttpLayer>) -> Result<Runtim
                         http_layer,
                         shutdown_rx.clone(),
                         hicache_manager,
+                        dyn_tokenizer.clone(),
                     );
                     if let Some((listener, service)) = grpc_server {
                         tokio::join!(
