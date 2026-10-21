@@ -76,6 +76,10 @@ impl PromptEncoder {
         }
         Ok(ids)
     }
+
+    pub(super) fn tokenizer(&self) -> &Tokenizer {
+        &self.tokenizer
+    }
 }
 
 /// Render a chat request for the tokenizer pool.
