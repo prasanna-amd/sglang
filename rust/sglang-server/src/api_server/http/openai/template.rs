@@ -99,10 +99,7 @@ pub(super) fn render_chat(
         // so the formatter's own template renders it, as it did before that
         // path existed. DeepSeek-V4 has no other path.
         Some(Err(TemplateError::EngineOnly { .. }))
-            if !matches!(
-                formatter,
-                ChatFormatter::DeepSeekV4(_) | ChatFormatter::DeepSeekV41
-            ) =>
+            if !matches!(formatter, ChatFormatter::DeepSeekV4(_)) =>
         {
             render_template(formatter, request, &kwargs, continuing)
         }
@@ -343,6 +340,27 @@ mod tests {
             "chat_template_kwargs": {"enable_thinking": false}
         });
         assert_eq!(render(&formatter, body).prompt.as_str(), "high|True|False");
+    }
+
+    /// A DeepSeek-V4.1 developer turn, which SGLang's encoder declines, renders
+    /// through Dynamo's, as before that encoder existed.
+    #[test]
+    fn declined_deepseek_v41_requests_render_through_dynamo() {
+        let messages = json!([
+            {"role": "developer", "content": "Be brief."},
+            {"role": "user", "content": "Hi"}
+        ]);
+        let body = json!({"model": "m", "messages": messages});
+        let formatter = ChatFormatter::DeepSeekV41;
+        assert!(matches!(
+            formatter.render_request(body.clone(), &HashMap::new()),
+            Err(TemplateError::EngineOnly { .. })
+        ));
+        let prompt = render(&formatter, body).prompt.as_str().to_owned();
+        assert!(
+            prompt.contains("Be brief.") && prompt.contains("Hi"),
+            "{prompt}"
+        );
     }
 
     /// Qwen3.8's renderer declines floats serde_json prints unlike Python;
