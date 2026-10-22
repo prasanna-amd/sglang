@@ -79,8 +79,11 @@ pub async fn serve(
         .as_ref()
         .and(tokenizer)
         .map(|tokenizer| openai::PromptEncoder::new(tokenizer, &server_args));
+    // Legacy conversation templates add stop strings `lower_chat` never sees;
+    // they stay on the typed handler.
     let openai_chat = chat_formatter
         .as_ref()
+        .filter(|formatter| !matches!(formatter, openai::ChatFormatter::Legacy(_)))
         .zip(prompt_encoder.clone())
         .map(|(formatter, encoder)| openai::OpenAiChat::new(&server_args, formatter, encoder));
     let generation_policy = GenerationPolicy::from(server_args.as_ref());
